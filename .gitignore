@@ -21,3 +21,7 @@ mlartifacts/
 Dataset/
 Task Requirment/
 *.pptx
+
+# MLflow local backend
+mlflow.db
+mlartifacts/

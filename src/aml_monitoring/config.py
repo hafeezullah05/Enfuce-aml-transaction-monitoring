@@ -11,7 +11,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RAW_DIR = REPO_ROOT / "Dataset" / "data"
 ARTIFACTS_DIR = REPO_ROOT / "artifacts"  # cached features, trained models, plots
-MLFLOW_URI = f"file://{REPO_ROOT / 'mlruns'}"
+# MLflow 3.x deprecated the plain file store; use a local SQLite backend.
+MLFLOW_URI = f"sqlite:///{REPO_ROOT / 'mlflow.db'}"
 
 SEED = 42
 
@@ -25,6 +26,7 @@ TRAIN_MONTHS = [
 ]
 VAL_MONTHS = ["2023-06"]
 TEST_MONTHS = ["2023-07", "2023-08"]
+ALL_MONTHS = TRAIN_MONTHS + VAL_MONTHS + TEST_MONTHS
 
 # --- Columns -------------------------------------------------------------
 TARGET = "Is_laundering"
