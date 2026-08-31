@@ -1,0 +1,23 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+~$*
+
+# Project artefacts (regenerated, large, or not for the repo)
+artifacts/
+mlruns/
+mlartifacts/
+Dataset/
+Task Requirment/
+*.pptx
