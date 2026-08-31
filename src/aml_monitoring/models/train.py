@@ -98,14 +98,23 @@ def train_lightgbm(ds: Dataset, scale_pos_weight: float = 1.0) -> lgb.LGBMClassi
             and handle imbalance at the threshold (ADR-0005). Kept as an
             argument so the sweep is reproducible.
     """
+    # Conservative settings on purpose: only ~5k positives in training, so a
+    # large tree (num_leaves=63) memorises them in one boosting round and early
+    # stopping fires at iteration 1. Shallow trees + a high min_child_samples +
+    # L1/L2 regularisation force the model to learn generalisable structure over
+    # many rounds instead.
     params = {
         "objective": "binary",
-        "n_estimators": 600,
-        "learning_rate": 0.05,
-        "num_leaves": 63,
+        "n_estimators": 2000,
+        "learning_rate": 0.02,
+        "num_leaves": 15,
+        "max_depth": 4,
+        "min_child_samples": 200,
         "subsample": 0.8,
         "subsample_freq": 1,
         "colsample_bytree": 0.8,
+        "reg_alpha": 1.0,
+        "reg_lambda": 5.0,
         "scale_pos_weight": scale_pos_weight,
         "random_state": SEED,
         "n_jobs": -1,
