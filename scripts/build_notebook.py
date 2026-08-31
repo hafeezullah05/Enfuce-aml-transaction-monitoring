@@ -45,12 +45,17 @@ import time
 import pandas as pd
 from sklearn.metrics import average_precision_score, roc_auc_score
 
-from aml_monitoring.config import TRAIN_MONTHS, VAL_MONTHS, TEST_MONTHS, ALERT_BUDGET_PCT
+import mlflow
+
+from aml_monitoring.config import (
+    ALERT_BUDGET_PCT, ARTIFACTS_DIR, MLFLOW_URI,
+    TRAIN_MONTHS, VAL_MONTHS, TEST_MONTHS,
+)
 from aml_monitoring.dataset import load_or_build_features, make_dataset, FEATURE_COLS
 from aml_monitoring.features.transaction import TRANSACTION_FEATURES
 from aml_monitoring.features.entity import ENTITY_FEATURES
-from aml_monitoring.models.train import train_baseline, train_lightgbm
 
+mlflow.set_tracking_uri(MLFLOW_URI)
 pd.set_option("display.max_columns", None)
 """),
     # 2
@@ -109,42 +114,31 @@ Val/test stay at natural prevalence. The detection-vs-workload trade-off is a
 
 Section 7 tests `scale_pos_weight` empirically.
 """),
-    # 6
+    # 6 + 7
     md("""
-## 6. Baseline — Logistic Regression
+## 6-7. Models, imbalance sweep, and the registered model
 
-A transparent reference. If a linear model on these features already separates the
-classes, the features carry real signal and any LightGBM gain is incremental.
+**Training is an offline batch job**, not notebook code: `scripts/run_part1_models.py`
+fits the Logistic Regression baseline and LightGBM at four `scale_pos_weight`
+values, logs every run to MLflow, and registers the chosen model. This notebook
+**loads** the registered model and evaluates it — the same separation you want in
+production (experiment vs. analysis).
+
+The sweep below is the evidence behind ADR-0005: the "obvious" fix for imbalance —
+set `scale_pos_weight` to the negatives/positives ratio (~1000) — is *catastrophic*
+here (PR-AUC 0.008, worse than the linear baseline). Mild weighting (1–5) is best.
 """),
     code("""
-baseline = train_baseline(ds)
+pd.read_csv(ARTIFACTS_DIR / "sweep_results.csv")
 """),
-    # 7
     md("""
-## 7. LightGBM + the imbalance sweep
-
-We train LightGBM at four `scale_pos_weight` values. The naive choice is
-negatives/positives (~1000). The sweep shows what that actually does to PR-AUC.
-Each call logs its own MLflow run (`mlflow ui` to compare).
+LogReg baseline PR-AUC is **0.012** — ~15x below LightGBM. The features carry
+signal, but the value is in the non-linear interactions and the entity-history
+features. We take `scale_pos_weight=1` forward.
 """),
     code("""
-results, models = [], {}
-for spw in [1.0, 5.0, 100.0, 1003.0]:
-    m = train_lightgbm(ds, scale_pos_weight=spw)
-    models[spw] = m
-    p = m.predict_proba(ds.X_val)[:, 1]
-    results.append({
-        "scale_pos_weight": spw,
-        "val_pr_auc": average_precision_score(ds.y_val, p),
-        "val_roc_auc": roc_auc_score(ds.y_val, p),
-    })
-
-comparison = pd.DataFrame(results)
-comparison
-"""),
-    code("""
-# The model we take forward.
-model = models[1.0]
+model = mlflow.lightgbm.load_model("models:/aml-transaction-monitoring/1")
+model
 """),
     # 8
     md("""
@@ -237,8 +231,24 @@ plt.tight_layout()
     md("""
 ## 9. Test-set summary
 
-*(fill after running: PR-AUC, the operating point, and one sentence on the
-detection-vs-workload trade-off for the deck.)*
+| | value |
+|---|---|
+| Test PR-AUC | **0.54** (val 0.68 — see Part 2: the model decays over ~2 months) |
+| Test ROC-AUC | 0.98 |
+| Operating point (1% budget, threshold from val) | **289 alerts/day · precision 8.6% · recall 74%** |
+| Strong typologies | Smurfing 100%, Cash_Withdrawal 97%, Structuring 79% |
+| Weak typologies | Fan_Out 60%, Layered_Fan_Out 63% — pure graph-structure patterns, no graph features yet |
+
+**The trade-off, in one sentence:** reviewing the top 1% of daily transaction
+scores (≈290 alerts/day, ≈22 of them real) catches roughly three-quarters of
+laundering; tightening to 0.1% (29 alerts/day) raises precision to 57% but drops
+recall to 49%. The right point is a capacity + risk-appetite decision for the
+investigations team, and it is a threshold move — the model does not change.
+
+**Known limitations (feed Part 4):**
+- No graph features -> weaker on fan-out / bipartite typologies.
+- Val -> test PR-AUC drop of 0.14 -> retraining cadence matters (Part 2).
+- Labels are synthetic and instantaneous; real SAR outcomes lag by months.
 """),
 ]
 
