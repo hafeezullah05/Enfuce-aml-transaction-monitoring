@@ -45,6 +45,7 @@ class Dataset:
     y_val: pd.Series
     X_test: pd.DataFrame
     y_test: pd.Series
+    meta_val: pd.DataFrame
     meta_test: pd.DataFrame
 
 
@@ -77,8 +78,9 @@ def make_dataset(
     X_train, y_train = _xy(df, train_months)
     X_val, y_val = _xy(df, val_months)
     X_test, y_test = _xy(df, test_months)
-    meta_test = df[df["month"].isin(test_months)][META_COLS].copy()
-    return Dataset(X_train, y_train, X_val, y_val, X_test, y_test, meta_test)
+    meta_val = df[df["month"].isin(val_months)][META_COLS].reset_index(drop=True)
+    meta_test = df[df["month"].isin(test_months)][META_COLS].reset_index(drop=True)
+    return Dataset(X_train, y_train, X_val, y_val, X_test, y_test, meta_val, meta_test)
 
 FEATURE_CACHE = ARTIFACTS_DIR / "features.parquet"
 

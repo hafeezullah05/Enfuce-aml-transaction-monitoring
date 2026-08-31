@@ -150,13 +150,95 @@ model = models[1.0]
     md("""
 ## 8. Evaluation
 
-*(next session)*
+**Headline metric: PR-AUC (average precision), not ROC-AUC.** At 0.1% prevalence
+ROC-AUC is dominated by millions of trivially-classified negatives and stays high
+even for a weak model. PR-AUC only rewards precision *on the positives*, which is
+what an alerting system lives or dies by.
 
-- PR-AUC vs ROC-AUC — why ROC-AUC misleads at 0.1% prevalence
-- precision / recall / alerts-per-day at the 1% alert budget
-- threshold selection with an explicit cost argument
-- recall sliced by `Laundering_type`
-- feature importance
+But no single number captures the real question: **within the alerts investigators
+can review per day, how much laundering do we catch?** So the core artefact is the
+operating-point table — precision / recall / alerts-per-day across alert budgets.
+"""),
+    code("""
+from aml_monitoring.models.evaluate import (
+    score_frame, ranking_metrics, operating_points,
+    threshold_for_budget, recall_by_typology, pr_curve,
+)
+
+val_scored = score_frame(model, ds.X_val, ds.y_val, ds.meta_val)
+test_scored = score_frame(model, ds.X_test, ds.y_test, ds.meta_test)
+
+pd.DataFrame({"val": ranking_metrics(val_scored), "test": ranking_metrics(test_scored)})
+"""),
+    md("""
+### 8a. Operating points on the test set
+
+Each row: a global score cutoff set so that `budget` of transactions are alerted.
+`alerts_per_day` is the investigator workload; `recall` is the share of laundering
+caught; `precision` is the share of alerts that are real.
+"""),
+    code("""
+operating_points(test_scored).style.format({
+    "budget": "{:.3f}", "threshold": "{:.4f}", "precision": "{:.3f}", "recall": "{:.3f}"
+})
+"""),
+    md("""
+### 8b. Choosing the operating threshold
+
+The threshold is chosen on the **validation** month at the 1% budget, then applied
+unchanged to the held-out test months — so the reported numbers are honest.
+"""),
+    code("""
+thr = threshold_for_budget(val_scored, ALERT_BUDGET_PCT)
+
+alert = test_scored["score"] >= thr
+n_alert = int(alert.sum())
+n_days = test_scored["date"].nunique()
+pos = int(test_scored["label"].sum())
+tp = int((alert & (test_scored["label"] == 1)).sum())
+
+print(f"threshold (val, {ALERT_BUDGET_PCT:.0%} budget) : {thr:.4f}")
+print(f"test alerts / day                  : {n_alert / n_days:,.0f}")
+print(f"test precision                     : {tp / n_alert:.3f}")
+print(f"test recall                        : {tp / pos:.3f}")
+print(f"laundering caught / missed         : {tp} / {pos - tp}")
+"""),
+    md("""
+### 8c. Where does recall come from — and go missing?
+
+Recall per laundering typology at the chosen threshold. This tells the investigation
+team which patterns the model reliably catches (structuring, fan-out) and which slip
+through (e.g. single large transfers that look like ordinary large payments).
+"""),
+    code("""
+recall_by_typology(test_scored, thr)
+"""),
+    md("### 8d. Feature importance"),
+    code("""
+pd.Series(model.feature_importances_, index=ds.X_test.columns).sort_values(ascending=False).head(15)
+"""),
+    md("### 8e. Plots — PR curve and recall vs workload"),
+    code("""
+import numpy as np
+import matplotlib.pyplot as plt
+
+op = operating_points(test_scored, budgets=tuple(np.round(np.linspace(0.0005, 0.05, 30), 5)))
+fig, ax = plt.subplots(1, 2, figsize=(12, 4))
+ax[0].plot(op["recall"], op["precision"], marker=".")
+ax[0].set(xlabel="recall", ylabel="precision", title="Precision–Recall (test)")
+ax[1].plot(op["alerts_per_day"], op["recall"], marker=".")
+ax[1].axvline(n_alert / n_days, ls="--", c="k", lw=1, label="chosen budget")
+ax[1].set(xlabel="alerts / day", ylabel="recall", title="Recall vs investigator workload")
+ax[1].legend()
+for a in ax:
+    a.grid(alpha=0.3)
+plt.tight_layout()
+"""),
+    md("""
+## 9. Test-set summary
+
+*(fill after running: PR-AUC, the operating point, and one sentence on the
+detection-vs-workload trade-off for the deck.)*
 """),
 ]
 
