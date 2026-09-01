@@ -21,3 +21,13 @@ mlartifacts/
 Dataset/
 Task Requirment/
 *.pptx
+
+# MLflow local backend
+mlflow.db
+mlartifacts/
+
+# keep the deck out of git (email it); generator + notes are tracked
+presentation/*.pdf
+presentation/slide-*.png
+presentation/node_modules
+!presentation/AML-Transaction-Monitoring.pptx
