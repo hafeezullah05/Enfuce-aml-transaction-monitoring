@@ -18,8 +18,8 @@ Python 3.11 · uv · pandas · scikit-learn / LightGBM · MLflow (tracking + reg
 | `src/aml_monitoring/features/` | Transaction-level + **causal** entity-behaviour features (leakage-tested) |
 | `src/aml_monitoring/dataset.py` | Feature build + temporal split + parquet cache |
 | `src/aml_monitoring/models/` | Pure fit functions + the evaluation module |
-| `scripts/run_part1_models.py` | Offline training job — sweeps, logs to MLflow, registers the model |
-| `notebooks/main.ipynb` | The Part 1 narrative — loads the registered model, evaluates |
+| `scripts/run_part1.py` | Offline training job — sweeps, logs to MLflow, registers the model |
+| `notebooks/part1.ipynb` | The Part 1 narrative — loads the registered model, evaluates |
 | `docs/` | Model write-up, architecture, delivery plan, ADRs |
 | `presentation/` | Deck + speaker notes + generator |
 | `tests/` | Leakage tests for the entity features |
@@ -29,8 +29,8 @@ Python 3.11 · uv · pandas · scikit-learn / LightGBM · MLflow (tracking + reg
 ```bash
 uv sync
 # put the SAML-D monthly CSVs in Dataset/data/  (not committed)
-uv run python scripts/run_part1_models.py      # Part 1: train sweep + register @champion
-uv run jupyter lab notebooks/main.ipynb        # Part 1: evaluate
+uv run python scripts/run_part1.py      # Part 1: train sweep + register @champion
+uv run jupyter lab notebooks/part1.ipynb        # Part 1: evaluate
 uv run python scripts/run_part2.py             # Part 2: monitor Jul-Aug, trigger, challenger
 uv run jupyter lab notebooks/part2.ipynb       # Part 2: dashboard + narrative
 uv run pytest
@@ -40,7 +40,7 @@ uv run pytest
 
 | Part | Status | Where |
 |---|---|---|
-| **1 — Model development & evaluation** | ✅ built | `src/`, `notebooks/main.ipynb`, `docs/part1-model.md`, ADRs 0001–0005 |
+| **1 — Model development & evaluation** | ✅ built | `src/`, `notebooks/part1.ipynb`, `docs/part1-model.md`, ADRs 0001–0005 |
 | **2 — ML lifecycle & MLOps** | ✅ built (monitoring + retraining trigger + challenger promotion, run on Jul–Aug) | `src/aml_monitoring/monitoring/`, `src/aml_monitoring/lifecycle.py`, `scripts/run_part2.py`, `notebooks/part2.ipynb`, `docs/part2-lifecycle.md` |
 | **3 — Production architecture** | design + trade-offs + Terraform sketch | `docs/architecture.md` |
 | **4 — Delivery (3 / 6 / 9 months)** | design | `docs/delivery-plan.md` |
