@@ -74,7 +74,8 @@ def main() -> None:
 
     assert ship_run_id is not None
     mv = mlflow.register_model(f"runs:/{ship_run_id}/model", REGISTERED_NAME)
-    print(f"\nregistered {REGISTERED_NAME} v{mv.version}  (scale_pos_weight={SHIP})")
+    mlflow.MlflowClient().set_registered_model_alias(REGISTERED_NAME, "champion", mv.version)
+    print(f"\nregistered {REGISTERED_NAME} v{mv.version} as @champion  (scale_pos_weight={SHIP})")
     print(sweep.to_string(index=False))
 
 

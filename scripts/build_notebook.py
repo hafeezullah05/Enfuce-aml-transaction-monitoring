@@ -137,7 +137,7 @@ signal, but the value is in the non-linear interactions and the entity-history
 features. We take `scale_pos_weight=1` forward.
 """),
     code("""
-model = mlflow.lightgbm.load_model("models:/aml-transaction-monitoring/1")
+model = mlflow.lightgbm.load_model("models:/aml-transaction-monitoring@champion")
 model
 """),
     # 8
