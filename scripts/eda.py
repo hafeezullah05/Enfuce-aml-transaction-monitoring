@@ -8,7 +8,7 @@ Goal: answer the questions we need before making Part 1 modelling decisions:
   - do a couple of cheap features (cross-border, currency mismatch) actually separate the classes?
   - do accounts recur? (entity-level aggregate features only make sense if they do)
 
-Run:  uv run python scripts/01_eda.py
+Run:  uv run python scripts/eda.py
 """
 
 from __future__ import annotations

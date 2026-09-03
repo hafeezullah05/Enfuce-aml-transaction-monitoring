@@ -1,4 +1,4 @@
-"""Regenerate notebooks/main.ipynb with the Part 1 structure.
+"""Regenerate notebooks/part1.ipynb with the Part 1 structure.
 
 One-off helper so the notebook layout lives in version control as plain text.
 Run: uv run python scripts/build_notebook.py
@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-NB = Path("notebooks/main.ipynb")
+NB = Path("notebooks/part1.ipynb")
 
 
 def md(text: str) -> dict:
@@ -118,7 +118,7 @@ Section 7 tests `scale_pos_weight` empirically.
     md("""
 ## 6-7. Models, imbalance sweep, and the registered model
 
-**Training is an offline batch job**, not notebook code: `scripts/run_part1_models.py`
+**Training is an offline batch job**, not notebook code: `scripts/run_part1.py`
 fits the Logistic Regression baseline and LightGBM at four `scale_pos_weight`
 values, logs every run to MLflow, and registers the chosen model. This notebook
 **loads** the registered model and evaluates it — the same separation you want in
@@ -207,9 +207,33 @@ through (e.g. single large transfers that look like ordinary large payments).
     code("""
 recall_by_typology(test_scored, thr)
 """),
-    md("### 8d. Feature importance"),
+    md("""
+### 8d. Explainability — SHAP
+
+Split-count importance tells you *how often* a feature is used, not *how it moves a
+decision*. For an AML control we need the second, per alert: every alert an
+investigator opens needs a reason, and every SAR filed needs a documented basis.
+
+`aml_monitoring.models.explain` wraps a tree-path-dependent `TreeExplainer` (exact
+for GBDTs). `global_importance` is the honest ranking; `explain_alert` is the
+reason code for a single transaction.
+"""),
     code("""
-pd.Series(model.feature_importances_, index=ds.X_test.columns).sort_values(ascending=False).head(15)
+from aml_monitoring.models.explain import (
+    build_explainer, shap_frame, global_importance,
+    explain_alert, pick_reason_code_alert,
+)
+
+explainer = build_explainer(model)
+sv = shap_frame(explainer, ds.X_test.sample(20_000, random_state=0))
+global_importance(sv).head(12)
+"""),
+    code("""
+# reason codes for one caught laundering alert (same worked example as the deck)
+tp_rows = ds.X_test[ds.y_test.to_numpy() == 1]
+tp_row_scores = model.predict_proba(tp_rows)[:, 1]
+alert_i = pick_reason_code_alert(model, explainer, tp_rows, tp_row_scores)
+explain_alert(model, explainer, tp_rows.iloc[[alert_i]], top_n=8)
 """),
     md("### 8e. Plots — PR curve and recall vs workload"),
     code("""
@@ -235,15 +259,17 @@ plt.tight_layout()
 |---|---|
 | Test PR-AUC | **0.54** (val 0.68 — see Part 2: the model decays over ~2 months) |
 | Test ROC-AUC | 0.98 |
-| Operating point (1% budget, threshold from val) | **289 alerts/day · precision 8.6% · recall 74%** |
+| Operating point (threshold fixed on val at 1% budget, applied to test) | **405 alerts/day · precision 6.4% · recall 77%** (realised alert rate 1.4%) |
+| By-budget curve (threshold re-set on test) | 1% budget → 289/day · 8.6% · 74%;  0.1% → 29/day · 57% · 49% |
 | Strong typologies | Smurfing 100%, Cash_Withdrawal 97%, Structuring 79% |
 | Weak typologies | Fan_Out 60%, Layered_Fan_Out 63% — pure graph-structure patterns, no graph features yet |
 
-**The trade-off, in one sentence:** reviewing the top 1% of daily transaction
-scores (≈290 alerts/day, ≈22 of them real) catches roughly three-quarters of
-laundering; tightening to 0.1% (29 alerts/day) raises precision to 57% but drops
-recall to 49%. The right point is a capacity + risk-appetite decision for the
-investigations team, and it is a threshold move — the model does not change.
+**The trade-off, in one sentence:** with the threshold fixed on validation and
+applied blind to test, ≈405 alerts/day (≈26 of them real) catches roughly
+three-quarters of laundering; tightening the budget to 0.1% (29 alerts/day) raises
+precision to 57% but drops recall to 49%. The right point is a capacity +
+risk-appetite decision for the investigations team, and it is a threshold move —
+the model does not change.
 
 **Known limitations (feed Part 4):**
 - No graph features -> weaker on fan-out / bipartite typologies.

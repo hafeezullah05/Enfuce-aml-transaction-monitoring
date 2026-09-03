@@ -58,7 +58,7 @@ test 2023-07…2023-08. No shuffling. See ADR-0004.
   L1/L2 regularisation) because there are only ~5k positives in training — a
   larger tree memorises them in one boosting round.
 
-Training is an offline job (`scripts/run_part1_models.py`): every run logged to
+Training is an offline job (`scripts/run_part1.py`): every run logged to
 MLflow, the shipped model registered as `aml-transaction-monitoring` v1. The
 notebook loads the registered model and never retrains.
 
@@ -88,7 +88,7 @@ budget (score ≥ 0.0079), then applied unchanged to the test months:
 
 | | test |
 |---|---|
-| alerts / day | 405 |
+| alerts / day | 405 (realised alert rate ~1.4%) |
 | precision | 6.4% |
 | recall | 76.7% (1390 caught / 423 missed) |
 
@@ -97,7 +97,7 @@ over the two months, so a fixed threshold slowly widens the net. That gap
 (0.68 → 0.54 PR-AUC, 1.0% → 1.4% alert rate in ~2 months) is the concrete case
 for the monitoring and retraining work in Part 2.
 
-**The trade-off in one sentence:** reviewing ~400 alerts/day (~22 of them real)
+**The trade-off in one sentence:** reviewing ~405 alerts/day (~26 of them real)
 catches ~three-quarters of laundering; tightening the budget to 0.1% (29
 alerts/day) raises precision to 57% but drops recall to 49%. The right point is a
 capacity + risk-appetite decision for the investigations team — and it is a

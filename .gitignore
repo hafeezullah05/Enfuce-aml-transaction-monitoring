@@ -26,8 +26,9 @@ Task Requirment/
 mlflow.db
 mlartifacts/
 
-# keep the deck out of git (email it); generator + notes are tracked
+# Presentation: deck (.pptx) is tracked; PDF regenerates; speaker notes stay private
 presentation/*.pdf
 presentation/slide-*.png
 presentation/node_modules
+presentation/speaker-notes.md
 !presentation/AML-Transaction-Monitoring.pptx

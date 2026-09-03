@@ -1,0 +1,55 @@
+{
+  "score": 0.8961,
+  "shap_base_value": -11.6128,
+  "margin": 2.1549,
+  "drivers": [
+    {
+      "feature": "receiver_prior_txn_count",
+      "value": 130,
+      "shap": 4.1685,
+      "direction": "raises risk"
+    },
+    {
+      "feature": "sender_secs_since_last",
+      "value": 7060021.0,
+      "shap": 2.8507,
+      "direction": "raises risk"
+    },
+    {
+      "feature": "Payment_type",
+      "value": "Cash Withdrawal",
+      "shap": 2.5577,
+      "direction": "raises risk"
+    },
+    {
+      "feature": "sender_prior_txn_count",
+      "value": 19,
+      "shap": 1.7871,
+      "direction": "raises risk"
+    },
+    {
+      "feature": "sender_cnt_7d",
+      "value": 0.0,
+      "shap": -0.9896,
+      "direction": "lowers risk"
+    },
+    {
+      "feature": "receiver_secs_since_last",
+      "value": 2634737.0,
+      "shap": 0.9363,
+      "direction": "raises risk"
+    },
+    {
+      "feature": "receiver_cnt_1d",
+      "value": 0.0,
+      "shap": 0.5918,
+      "direction": "raises risk"
+    },
+    {
+      "feature": "receiver_cnt_7d",
+      "value": 0.0,
+      "shap": 0.5384,
+      "direction": "raises risk"
+    }
+  ]
+}

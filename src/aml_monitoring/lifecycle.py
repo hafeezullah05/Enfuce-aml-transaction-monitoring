@@ -94,9 +94,9 @@ def rolling_window(all_months: list[str], through: str, width: int = 8) -> list[
     return all_months[max(0, idx - width + 1) : idx + 1]
 
 
-def fit_challenger(ds: Dataset) -> object:
+def fit_challenger(ds: Dataset, progress: bool = True) -> object:
     """Fit a challenger on a (rolling-window) dataset. Same recipe as the champion."""
-    return fit_lightgbm(ds, scale_pos_weight=1.0)
+    return fit_lightgbm(ds, scale_pos_weight=1.0, progress=progress)
 
 
 def compare_on_labelled(

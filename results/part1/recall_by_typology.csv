@@ -1,0 +1,18 @@
+Laundering_type,n,caught,recall
+Fan_Out,62,37,0.597
+Layered_Fan_Out,294,185,0.629
+Stacked Bipartite,138,88,0.638
+Bipartite,26,17,0.654
+Deposit-Send,175,123,0.703
+Cycle,49,35,0.714
+Gather-Scatter,85,66,0.776
+Structuring,508,400,0.787
+Scatter-Gather,50,40,0.8
+Layered_Fan_In,113,97,0.858
+Over-Invoicing,8,7,0.875
+Fan_In,39,36,0.923
+Behavioural_Change_1,110,106,0.964
+Cash_Withdrawal,57,55,0.965
+Single_large,35,34,0.971
+Behavioural_Change_2,26,26,1.0
+Smurfing,38,38,1.0
