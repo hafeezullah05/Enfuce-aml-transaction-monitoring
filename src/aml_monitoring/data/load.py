@@ -42,8 +42,10 @@ def load_months(months: list[str]) -> pd.DataFrame:
         DataFrame with an added ``timestamp`` (datetime) and ``month`` (str) column,
         sorted ascending by ``timestamp``, index reset.
     """
+    from tqdm.auto import tqdm
+
     frames = []
-    for m in months:
+    for m in tqdm(months, desc="loading months", unit="file"):
         part = pd.read_csv(_month_path(m), dtype=DTYPES)
         part["month"] = m
         frames.append(part)

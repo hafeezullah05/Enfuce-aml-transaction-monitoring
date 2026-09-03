@@ -1,0 +1,12 @@
+{
+  "champion": {
+    "august_pr_auc": 0.4543,
+    "august_recall_at_budget": 0.6614
+  },
+  "challenger": {
+    "august_pr_auc": 0.6851,
+    "august_recall_at_budget": 0.8193
+  },
+  "note": "threshold set per model at the 1% budget on August scores",
+  "challenger_wins": true
+}

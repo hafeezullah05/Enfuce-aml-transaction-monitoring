@@ -7,7 +7,7 @@ values, logs every run to MLflow, writes the sweep table to
 
 The notebook loads the registered model; it never retrains. Run:
 
-    uv run python scripts/run_part1_models.py
+    uv run python scripts/run_part1.py
 """
 
 from __future__ import annotations
@@ -50,10 +50,12 @@ def main() -> None:
                  "val_pr_auc": round(pr, 4), "val_roc_auc": round(roc, 4)})
     print(f"done logreg  pr_auc={pr:.4f}", flush=True)
 
+    from tqdm.auto import tqdm
+
     ship_run_id: str | None = None
-    for spw in SWEEP:
+    for spw in tqdm(SWEEP, desc="scale_pos_weight sweep", unit="model"):
         with mlflow.start_run(run_name=f"lightgbm-spw{spw:g}") as run:
-            model = fit_lightgbm(ds, scale_pos_weight=spw)
+            model = fit_lightgbm(ds, scale_pos_weight=spw, progress=True)
             pr, roc = _val_metrics(model, ds)
             mlflow.log_params(lgbm_params(spw))
             mlflow.log_metrics({

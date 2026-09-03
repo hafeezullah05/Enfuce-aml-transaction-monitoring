@@ -1,0 +1,6 @@
+model,scale_pos_weight,val_pr_auc,val_roc_auc
+logreg,,0.0121,0.8832
+lightgbm,1.0,0.6821,0.9904
+lightgbm,5.0,0.6849,0.9908
+lightgbm,100.0,0.5854,0.9887
+lightgbm,1003.0,0.0078,0.8612

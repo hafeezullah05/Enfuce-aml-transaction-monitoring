@@ -1,0 +1,6 @@
+run_id,metrics.val_roc_auc,metrics.val_pr_auc,metrics.best_iteration,params.model,params.random_state,params.objective,params.max_depth,params.reg_alpha,params.subsample,params.num_leaves,params.reg_lambda,params.n_estimators,params.learning_rate,params.scale_pos_weight,params.min_child_samples,params.n_jobs,params.subsample_freq,params.verbosity,params.colsample_bytree,tags.mlflow.runName
+d8390237679f4c7085be271300dce4bd,0.883184284891409,0.01213926220566451,,logreg,,,,,,,,,,,,,,,,logreg-baseline
+5aff94635969432db036929528513e34,0.9904391186142143,0.6820848420427116,1993.0,,42,binary,4,1.0,0.8,15,5.0,2000,0.02,1.0,200,-1,1,-1,0.8,lightgbm-spw1
+d94463e1e9b44eecae394e05cab9dc69,0.9907976005481084,0.6848580603338773,2000.0,,42,binary,4,1.0,0.8,15,5.0,2000,0.02,5.0,200,-1,1,-1,0.8,lightgbm-spw5
+0bf04d3cad8c482d89c9d267d3ea487f,0.9886905650641751,0.5854483311410255,2000.0,,42,binary,4,1.0,0.8,15,5.0,2000,0.02,100.0,200,-1,1,-1,0.8,lightgbm-spw100
+4b254a85a4e44a68a572bab1223b2070,0.8611801356588067,0.007784651535018062,2.0,,42,binary,4,1.0,0.8,15,5.0,2000,0.02,1003.0,200,-1,1,-1,0.8,lightgbm-spw1003

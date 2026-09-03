@@ -92,15 +92,54 @@ def lgbm_params(scale_pos_weight: float = 1.0) -> dict:
     }
 
 
-def fit_lightgbm(ds: Dataset, scale_pos_weight: float = 1.0) -> lgb.LGBMClassifier:
-    """Fit LightGBM, early-stopping on validation average precision."""
-    model = lgb.LGBMClassifier(**lgbm_params(scale_pos_weight))
-    model.fit(
-        ds.X_train,
-        ds.y_train,
-        eval_set=[(ds.X_val, ds.y_val)],
-        eval_metric="average_precision",
-        categorical_feature=CATEGORICAL_COLS,
-        callbacks=[lgb.early_stopping(50), lgb.log_evaluation(0)],
-    )
+def _tqdm_callback(total: int):
+    """A LightGBM callback that drives a tqdm bar over boosting rounds.
+
+    Also prints the running validation average-precision so you can watch it
+    climb (and see where early stopping will land).
+    """
+    from tqdm.auto import tqdm
+
+    bar = tqdm(total=total, desc="boosting", unit="tree", leave=False)
+
+    def _cb(env: lgb.callback.CallbackEnv) -> None:  # type: ignore[name-defined]
+        bar.update(env.iteration + 1 - bar.n)
+        if env.evaluation_result_list:
+            _, _, score, _ = env.evaluation_result_list[0]
+            bar.set_postfix_str(f"val AP={score:.4f}")
+        if env.iteration + 1 >= total:
+            bar.close()
+
+    _cb.order = 99  # run after the metric callbacks
+    _cb._bar = bar  # keep a handle so fit_lightgbm can close it on early stop
+    return _cb
+
+
+def fit_lightgbm(
+    ds: Dataset, scale_pos_weight: float = 1.0, progress: bool = False
+) -> lgb.LGBMClassifier:
+    """Fit LightGBM, early-stopping on validation average precision.
+
+    Args:
+        progress: show a tqdm progress bar over boosting rounds.
+    """
+    params = lgbm_params(scale_pos_weight)
+    model = lgb.LGBMClassifier(**params)
+    callbacks = [lgb.early_stopping(50), lgb.log_evaluation(0)]
+    bar_cb = None
+    if progress:
+        bar_cb = _tqdm_callback(params["n_estimators"])
+        callbacks.append(bar_cb)
+    try:
+        model.fit(
+            ds.X_train,
+            ds.y_train,
+            eval_set=[(ds.X_val, ds.y_val)],
+            eval_metric="average_precision",
+            categorical_feature=CATEGORICAL_COLS,
+            callbacks=callbacks,
+        )
+    finally:
+        if bar_cb is not None:
+            bar_cb._bar.close()
     return model
